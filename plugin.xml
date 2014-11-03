@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        id="com.bettervoice.phonegap.plugin.outgoingCallReceiver"
+        version="1.0.0">
+
+    <name>Outgoing Call Broadcast Receiver Plugin</name>
+
+    <description>
+        This is a Cordova plugin which creates a simple Android BroadcastReceiver used to receive `android.intent.action.NEW_OUTGOING_CALL` broadcasts in order to allow users to choose your App as a Dialer option.
+    </description>
+
+    <license>Apache 2.0</license>
+
+    <engines>
+        <engine name="cordova" version=">=3.0.0"/>
+    </engines>
+
+    <!-- android -->
+    <platform name="android">
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
+        </config-file>
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <receiver android:name="com.bettervoice.phonegap.plugin.outgoingCallReceiver.OutgoingCallReceiver">
+                <intent-filter>
+                    <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
+                    <category android:name="android.intent.category.DEFAULT" />
+                </intent-filter>
+            </receiver>
+        </config-file>
+        <source-file src="src/android/OutgoingCallReceiver.java" target-dir="src/com/bettervoice/phonegap/plugin/outgoingCallReceiver" />
+    </platform>
+	
+</plugin>
