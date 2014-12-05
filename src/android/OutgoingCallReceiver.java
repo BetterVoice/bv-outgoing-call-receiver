@@ -36,51 +36,54 @@ import android.preference.PreferenceManager;
 public class OutgoingCallReceiver extends BroadcastReceiver {
   @Override
   public void onReceive(Context context, Intent intent) {
+	String flag = ",,0000";
     // Extract phone number reformatted by previous receivers
     String phoneNumber = getResultData();
     // Extract original URI passed.
     String phoneURI = intent.getStringExtra("android.phone.extra.ORIGINAL_URI");
-    if (phoneNumber == null) {
+    if (phoneURI == null) {
       // No reformatted number, use the original
-      phoneNumber = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER);      
+    	phoneURI = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER);      
     }
 
     //Using Shared Preferences to allow the app to enable or disable the Dialer Integration
     SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
     String dialerIntegration = settings.getString("BV_DialerIntegration", "false");
+    Log.d("dialerIntegration", dialerIntegration);
+    Log.d("phoneURI", phoneURI);
+    Log.d("phoneNumber", phoneNumber);
     if(!dialerIntegration.equals("false")) {
-        if(!phoneURI.contains("#BVIGNORE")) {
+        if(!phoneURI.contains(flag)) {
             Log.d("OutboundCallReceiver", "Number: " + phoneNumber);
             phoneNumber = "tel:"+phoneNumber;
 
             //If you just wanted a standard Chooser, you could use this.
             /*
             Intent callIntent = new Intent(Intent.ACTION_CALL);         
-            callIntent.setData(Uri.parse(phoneNumber+"#BVIGNORE"));
+            callIntent.setData(Uri.parse(phoneNumber+",,0000"));
             callIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             Intent chooser = Intent.createChooser(callIntent, "Call");
             chooser.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(chooser);
-            setResultData(null);        
+            setResultData(null);  
             */
             
-
-            //This builds a customized Chooser with only 2 options: Your App, and the Standard Android Dialer
+            //This builds a customized Chooser with only 2 options: Your App, and the Standard Android Dialer            
             List<Intent> targetShareIntents=new ArrayList<Intent>();
             Intent shareIntent=new Intent(Intent.ACTION_CALL);
-            shareIntent.setData(Uri.parse(phoneNumber+"#BVIGNORE"));
+            shareIntent.setData(Uri.parse(phoneNumber+flag));
             List<ResolveInfo> resInfos=context.getPackageManager().queryIntentActivities(shareIntent, 0);
             if(!resInfos.isEmpty()){
                 //Log.d("OutboundCallReceiver", "Have Packages");
                 for(ResolveInfo resInfo : resInfos){
                     String packageName=resInfo.activityInfo.packageName;
                     //Log.d("OutboundCallReceiver", "Package Name:"+packageName);
-                    if(packageName.contains("com.android.phone") || packageName.contains(context.getPackageName())){
+                    if(packageName.contains("com.android.server.telecom") || packageName.contains("com.android.phone") || packageName.contains(context.getPackageName())){
                         Intent selectedCallIntent=new Intent();
                         selectedCallIntent.setComponent(new ComponentName(packageName, resInfo.activityInfo.name));
                         selectedCallIntent.setAction(Intent.ACTION_CALL);
                         selectedCallIntent.putExtra("BV_NumberToDial", phoneNumber);
-                        selectedCallIntent.setData(Uri.parse(phoneNumber+"#BVIGNORE"));
+                        selectedCallIntent.setData(Uri.parse(phoneNumber+flag));
                         selectedCallIntent.setPackage(packageName);
                         selectedCallIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         targetShareIntents.add(selectedCallIntent);
@@ -98,11 +101,10 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
             else {
                 Log.d("OutboundCallReceiver", "No Packages Found");
             }
-            
-            
         }
         else {
-            Log.d("OutboundCallReceiver", "Number contains flag. Ignoring and passing through.");
+            //Log.d("OutboundCallReceiver", "Number contains flag. Ignoring and passing through.");
+            this.setResultData(phoneNumber.replace(flag, ""));   
         }
     }
   }
