@@ -34,9 +34,9 @@ import android.content.pm.ResolveInfo;
 import android.preference.PreferenceManager;
  
 public class OutgoingCallReceiver extends BroadcastReceiver {
+  public static String flag = "";
   @Override
-  public void onReceive(Context context, Intent intent) {
-	String flag = ",,0000";
+  public void onReceive(Context context, Intent intent) {	
     // Extract phone number reformatted by previous receivers
     String phoneNumber = getResultData();
     // Extract original URI passed.
@@ -52,11 +52,10 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
     Log.d("dialerIntegration", dialerIntegration);
     Log.d("phoneURI", phoneURI);
     Log.d("phoneNumber", phoneNumber);
+    Log.d("Flag", flag);
     if(!dialerIntegration.equals("false")) {
-        if(!phoneURI.contains(flag)) {
+        if(!phoneURI.equals(flag)) {
             Log.d("OutboundCallReceiver", "Number: " + phoneNumber);
-            phoneNumber = "tel:"+phoneNumber;
-
             //If you just wanted a standard Chooser, you could use this.
             /*
             Intent callIntent = new Intent(Intent.ACTION_CALL);         
@@ -71,7 +70,7 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
             //This builds a customized Chooser with only 2 options: Your App, and the Standard Android Dialer            
             List<Intent> targetShareIntents=new ArrayList<Intent>();
             Intent shareIntent=new Intent(Intent.ACTION_CALL);
-            shareIntent.setData(Uri.parse(phoneNumber+flag));
+            shareIntent.setData(Uri.parse("tel:"+phoneNumber));
             List<ResolveInfo> resInfos=context.getPackageManager().queryIntentActivities(shareIntent, 0);
             if(!resInfos.isEmpty()){
                 //Log.d("OutboundCallReceiver", "Have Packages");
@@ -82,8 +81,9 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
                         Intent selectedCallIntent=new Intent();
                         selectedCallIntent.setComponent(new ComponentName(packageName, resInfo.activityInfo.name));
                         selectedCallIntent.setAction(Intent.ACTION_CALL);
-                        selectedCallIntent.putExtra("BV_NumberToDial", phoneNumber);
-                        selectedCallIntent.setData(Uri.parse(phoneNumber+flag));
+                        selectedCallIntent.putExtra("BV_NumberToDial", "tel:"+phoneNumber);
+                        //selectedCallIntent.setData(Uri.parse(phoneNumber+flag));
+                        selectedCallIntent.setData(Uri.parse("tel:"+phoneNumber));
                         selectedCallIntent.setPackage(packageName);
                         selectedCallIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         targetShareIntents.add(selectedCallIntent);
@@ -96,6 +96,7 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
                     chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetShareIntents.toArray(new Parcelable[]{}));
                     context.startActivity(chooserIntent);
                     setResultData(null);
+                    flag = phoneNumber;
                 }
             }
             else {
@@ -103,8 +104,9 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
             }
         }
         else {
-            //Log.d("OutboundCallReceiver", "Number contains flag. Ignoring and passing through.");
-            this.setResultData(phoneNumber.replace(flag, ""));   
+            Log.d("OutboundCallReceiver", "Number contains flag. Ignoring and passing through.");
+            setResultData(phoneNumber);
+            flag = "";
         }
     }
   }
