@@ -49,13 +49,16 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
     //Using Shared Preferences to allow the app to enable or disable the Dialer Integration
     SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
     String dialerIntegration = settings.getString("BV_DialerIntegration", "false");
+    String dialerOverride = settings.getString("BV_DialerOverride", "false");
     Log.d("dialerIntegration", dialerIntegration);
+    Log.d("dialerOverride", dialerOverride);
     Log.d("phoneURI", phoneURI);
     Log.d("phoneNumber", phoneNumber);
     Log.d("Flag", flag);
     if(!dialerIntegration.equals("false")) {
-        if(!phoneURI.equals(flag)) {
-            Log.d("OutboundCallReceiver", "Number: " + phoneNumber);
+        if(!phoneURI.equals(flag) && !dialerOverride.equals("true")) {
+            Log.d("OutboundCallReceiver", "Number: " + phoneNumber);     
+            
             //If you just wanted a standard Chooser, you could use this.
             /*
             Intent callIntent = new Intent(Intent.ACTION_CALL);         
@@ -105,6 +108,7 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
         }
         else {
             Log.d("OutboundCallReceiver", "Number contains flag. Ignoring and passing through.");
+            settings.edit().putString("BV_DialerOverride", "false").commit();
             setResultData(phoneNumber);
             flag = "";
         }
