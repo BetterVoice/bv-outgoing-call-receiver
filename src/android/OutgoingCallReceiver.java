@@ -56,7 +56,13 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
     Log.d("phoneNumber", phoneNumber);
     Log.d("Flag", flag);
     if(!dialerIntegration.equals("false")) {
-        if(!phoneURI.equals(flag) && !dialerOverride.equals("true")) {
+    	if (phoneURI.equals(flag) || dialerOverride.equals("true")) {
+            Log.d("OutboundCallReceiver", "Number contains flag. Ignoring and passing through.");
+            settings.edit().putString("BV_DialerOverride", "false").commit();
+            setResultData(phoneNumber);
+            flag = "";
+        }
+    	else {
             Log.d("OutboundCallReceiver", "Number: " + phoneNumber);     
             
             //If you just wanted a standard Chooser, you could use this.
@@ -105,13 +111,7 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
             else {
                 Log.d("OutboundCallReceiver", "No Packages Found");
             }
-        }
-        else {
-            Log.d("OutboundCallReceiver", "Number contains flag. Ignoring and passing through.");
-            settings.edit().putString("BV_DialerOverride", "false").commit();
-            setResultData(phoneNumber);
-            flag = "";
-        }
+        }        
     }
   }
 }
