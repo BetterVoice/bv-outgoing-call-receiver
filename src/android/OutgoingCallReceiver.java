@@ -34,7 +34,6 @@ import android.content.pm.ResolveInfo;
 import android.preference.PreferenceManager;
  
 public class OutgoingCallReceiver extends BroadcastReceiver {
-  public static String flag = "";
   @Override
   public void onReceive(Context context, Intent intent) {	
     // Extract phone number reformatted by previous receivers
@@ -54,16 +53,15 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
     Log.d("dialerOverride", dialerOverride);
     Log.d("phoneURI", phoneURI);
     Log.d("phoneNumber", phoneNumber);
-    Log.d("Flag", flag);
     if(!dialerIntegration.equals("false")) {
-    	if (phoneURI.equals(flag) || dialerOverride.equals("true")) {
+    	if (dialerOverride.equals("true")) {
             Log.d("OutboundCallReceiver", "Number contains flag. Ignoring and passing through.");
             settings.edit().putString("BV_DialerOverride", "false").commit();
             setResultData(phoneNumber);
-            flag = "";
         }
     	else {
-            Log.d("OutboundCallReceiver", "Number: " + phoneNumber);     
+            Log.d("OutboundCallReceiver", "Number: " + phoneNumber);   
+            settings.edit().putString("BV_DialerOverride", "true").commit();
             
             //If you just wanted a standard Chooser, you could use this.
             /*
@@ -91,7 +89,6 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
                         selectedCallIntent.setComponent(new ComponentName(packageName, resInfo.activityInfo.name));
                         selectedCallIntent.setAction(Intent.ACTION_CALL);
                         selectedCallIntent.putExtra("BV_NumberToDial", "tel:"+phoneNumber);
-                        //selectedCallIntent.setData(Uri.parse(phoneNumber+flag));
                         selectedCallIntent.setData(Uri.parse("tel:"+phoneNumber));
                         selectedCallIntent.setPackage(packageName);
                         selectedCallIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -99,13 +96,12 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
                     }
                 }
                 if(!targetShareIntents.isEmpty()){
-                    //Log.d("OutboundCallReceiver", "Have Intent to Share");
+                    //Log.d("OutboundCallReceiver", "Have Intent to Share");                	
                     Intent chooserIntent=Intent.createChooser(targetShareIntents.remove(0), "Choose A Dialer");
                     chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetShareIntents.toArray(new Parcelable[]{}));
-                    context.startActivity(chooserIntent);
-                    setResultData(null);
-                    flag = phoneNumber;
+                    context.startActivity(chooserIntent);                    
+                    setResultData(null);                    
                 }
             }
             else {
